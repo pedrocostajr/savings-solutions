@@ -12,8 +12,11 @@ a{color:#0d0d0d}a:hover{color:#333333}
 input,select,textarea{font:inherit}
 </style>
 <style>html{scroll-behavior:smooth}*{box-sizing:border-box}.hero{min-height:88vh;display:flex;align-items:flex-end}.hero>div{width:100%}</style>
+<link rel="stylesheet" href="assets/site.css">
+<script src="assets/site.js" defer></script>
 </head>
 <body>
+<a class="ss-skip" href="#main">Skip to main content</a>
 <div style="font-family: Manrope, system-ui, sans-serif; color: #0d0d0d; background: #ffffff; width: 100%; min-width: 0">
 
 <header style="position: sticky; top: 0; z-index: 10; background: #ffffff; border-bottom: 1px solid #e6e6e6">
@@ -29,6 +32,7 @@ input,select,textarea{font:inherit}
 </nav>
 </div>
 </header>
+<main id="main" tabindex="-1">
 
 <section class="hero" style="background: linear-gradient(180deg, rgba(13,13,13,0.45) 0%, rgba(13,13,13,0.82) 100%), url('https://images.unsplash.com/photo-1706164971309-fb4785fe6ceb?auto=format&fit=crop&w=2400&q=80') center / cover no-repeat #141414; color: #ffffff">
 <div style="max-width: 1280px; margin: 0 auto; padding: 72px 24px 96px">
@@ -114,14 +118,15 @@ input,select,textarea{font:inherit}
 <h2 style="margin: 0; font-family: Anybody, sans-serif; font-stretch: 130%; font-weight: 900; font-size: clamp(36px, 5vw, 64px); line-height: 0.95; text-transform: uppercase">Quote your General Liability</h2>
 <p style="margin: 24px 0 0; font-size: 18px; line-height: 1.6; color: #d0d0d0">Tell us about your business. A licensed advisor will compare carriers and get back to you in English or Portuguese.</p>
 </div>
-<form style="flex: 1 1 480px; min-width: 0; background: #ffffff; color: #0d0d0d; border-radius: 16px; padding: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
-<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Full name<input type="text" name="name" autocomplete="name" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px"></label>
-<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Phone<input type="tel" name="phone" autocomplete="tel" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px"></label>
+<form data-ss-lead novalidate style="flex: 1 1 480px; min-width: 0; background: #ffffff; color: #0d0d0d; border-radius: 16px; padding: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Full name<input type="text" name="name" autocomplete="name" required aria-required="true" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px"></label>
+<label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Phone<input type="tel" name="phone" autocomplete="tel" required aria-required="true" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px"></label>
 <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Type of business<input type="text" name="business" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px"></label>
 <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">ZIP code<input type="text" name="zip" inputmode="numeric" autocomplete="postal-code" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px"></label>
 <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Need a COI right away?<select name="coi" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px; background: #ffffff"><option>Yes, this week</option><option>No, just comparing</option></select></label>
 <label style="display: flex; flex-direction: column; gap: 6px; font-size: 14px; font-weight: 600">Preferred language<select name="language" style="padding: 14px; border: 1px solid #bdbdbd; border-radius: 8px; background: #ffffff"><option>English</option><option>Português</option></select></label>
-<button type="button" style="grid-column: 1 / -1; background: #FFD600; color: #0d0d0d; border: 0; border-radius: 10px; padding: 18px; font-family: Anybody, sans-serif; font-weight: 800; font-size: 17px; text-transform: uppercase; cursor: pointer">Get My Quote</button>
+<label class="ss-form-consent"><input type="checkbox" name="consent" required aria-required="true"><span>I agree to be contacted by phone, text or WhatsApp about insurance and I accept the <a href="privacy.html">Privacy Policy</a>.</span></label>
+<button type="submit" style="grid-column: 1 / -1; background: #FFD600; color: #0d0d0d; border: 0; border-radius: 10px; padding: 18px; font-family: Anybody, sans-serif; font-weight: 800; font-size: 17px; text-transform: uppercase; cursor: pointer">Get My Quote</button>
 <p style="grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 1.5; color: #555555">By submitting, you agree to be contacted about insurance by phone, text or email. Consent is not a condition of purchase.</p>
 </form>
 </div>
@@ -138,9 +143,10 @@ input,select,textarea{font:inherit}
 </div>
 </section>
 
+</main>
 <footer style="background: #0d0d0d; color: #b8b8b8">
 <div style="max-width: 1280px; margin: 0 auto; padding: 56px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 24px; font-size: 14px; line-height: 1.6">
-<div><div style="font-family: Anybody, sans-serif; font-stretch: 130%; font-weight: 900; font-size: 20px; color: #ffffff">4 SAVINGS SOLUTIONS</div><div style="margin-top: 8px">Licensed insurance agency · License #[LICENSE #] · [LICENSED STATES]</div></div>
+<div><div style="font-family: Anybody, sans-serif; font-stretch: 130%; font-weight: 900; font-size: 20px; color: #ffffff">4 SAVINGS SOLUTIONS</div><div style="margin-top: 8px">Licensed insurance agency · License #[LICENSE #] · [LICENSED STATES]</div><nav class="ss-legal" aria-label="Legal"><a href="privacy.html">Privacy Policy</a><button type="button" data-ss-cookie-settings>Cookie preferences</button><a href="privacy.html#accessibility">Accessibility</a></nav></div>
 <div style="max-width: 520px">Coverage, rates and availability depend on the carrier, the state and underwriting approval. This page is a general description, not a policy contract.</div>
 </div>
 </footer>
