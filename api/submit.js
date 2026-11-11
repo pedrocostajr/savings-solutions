@@ -86,8 +86,45 @@ ${files.length ? `<h3 style="margin:24px 0 8px">${pt ? 'Anexos' : 'Attachments'}
   };
 }
 
+// TEMPORARY troubleshooting: GET /api/submit?diag=1 checks the SMTP login without sending anything.
+// Shows the settings in use (password never shown) and the mail server's answer. Remove once email works.
+async function diagnose(res) {
+  const raw = (k) => process.env[k] == null ? null : String(process.env[k]);
+  const pass = raw('SMTP_PASS');
+  const user = raw('SMTP_USER');
+  const host = raw('SMTP_HOST');
+  const settings = {
+    SMTP_HOST: host,
+    SMTP_PORT: raw('SMTP_PORT') || '(not set, using 465)',
+    SMTP_USER: user,
+    SMTP_USER_has_spaces: user ? /\s/.test(user) : null,
+    SMTP_PASS_set: !!pass,
+    SMTP_PASS_length: pass ? pass.length : 0,
+    SMTP_PASS_spaces_at_ends: pass ? pass !== pass.trim() : null,
+    SMTP_PASS_wrapped_in_quotes: pass ? /^(['"]).*\1$/.test(pass) : null
+  };
+  const tests = [];
+  for (const h of [...new Set([host && host.trim(), 'smtp.hostinger.com', 'smtp.titan.email'].filter(Boolean))]) {
+    for (const port of [465, 587]) {
+      const t = nodemailer.createTransport({
+        host: h, port, secure: port === 465,
+        auth: { user: user && user.trim(), pass: pass && pass.trim() },
+        connectionTimeout: 8000, greetingTimeout: 8000, socketTimeout: 8000
+      });
+      try {
+        await t.verify();
+        tests.push({ host: h, port, result: 'OK: login accepted' });
+      } catch (err) {
+        tests.push({ host: h, port, result: `${err.code || ''} ${err.responseCode || ''} ${(err.response || err.message || '').toString().slice(0, 160)}`.trim() });
+      }
+    }
+  }
+  return res.status(200).json({ settings, tests });
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+  if (req.method === 'GET' && /[?&]diag=1(&|$)/.test(req.url || '')) return diagnose(res);
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return res.status(405).json({ ok: false, code: 'method_not_allowed' });
@@ -113,10 +150,11 @@ module.exports = async function handler(req, res) {
 
   try {
     const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      host: process.env.SMTP_HOST.trim(),
       port,
       secure: port === 465,
-      auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      // trim: values pasted into Vercel often carry a stray space
+      auth: { user: process.env.SMTP_USER.trim(), pass: process.env.SMTP_PASS.trim() }
     });
     await transporter.sendMail({
       from: `"4 Savings Solutions | Site" <${process.env.MAIL_FROM || process.env.SMTP_USER}>`,
