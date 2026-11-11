@@ -10,7 +10,7 @@
 
   var CONFIG = {
     // URL that receives each submission as multipart/form-data, files included.
-    // Empty = the site's own /api/submit (Vercel function that emails contacts@savings-solutions.com).
+    // Empty = the site's own /api/submit (Vercel function that emails contact@savings-solutions.com).
     // If that function is not configured yet, the form falls back to WhatsApp automatically.
     endpoint: '',
     maxUploadBytes: 4.2 * 1024 * 1024

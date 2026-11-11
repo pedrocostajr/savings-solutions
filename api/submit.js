@@ -6,15 +6,15 @@
    Environment variables (Vercel → Project → Settings → Environment Variables):
      SMTP_HOST   e.g. smtp.gmail.com (Google Workspace), smtp.office365.com, smtp.hostinger.com
      SMTP_PORT   465 (SSL) or 587 (STARTTLS). Default 465
-     SMTP_USER   the mailbox login, e.g. contacts@savings-solutions.com
+     SMTP_USER   the mailbox login, e.g. contact@savings-solutions.com
      SMTP_PASS   its password or app password
-     MAIL_TO     optional, default contacts@savings-solutions.com (comma-separate for several)
+     MAIL_TO     optional, default contact@savings-solutions.com (comma-separate for several)
      MAIL_FROM   optional, default SMTP_USER
    ========================================================================== */
 const Busboy = require('busboy');
 const nodemailer = require('nodemailer');
 
-const MAIL_TO = process.env.MAIL_TO || 'contacts@savings-solutions.com';
+const MAIL_TO = process.env.MAIL_TO || 'contact@savings-solutions.com';
 const MAX_FILE = 4 * 1024 * 1024; // Vercel caps a request body at 4.5 MB
 const MAX_FILES = 30;
 
