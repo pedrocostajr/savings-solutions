@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Seguro Residencial · 4 Savings Solutions</title>
+<script>
+(function () {
+  var l = null;
+  try {
+    l = new URLSearchParams(location.search).get('lang');
+    if (l) localStorage.setItem('ss-form-lang', l); else l = localStorage.getItem('ss-form-lang');
+  } catch (e) {}
+  if (!l) l = (navigator.language || 'pt').toLowerCase().indexOf('pt') === 0 ? 'pt' : 'en';
+  document.documentElement.lang = l === 'en' ? 'en' : 'pt-BR';
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anybody:wdth,wght@50..150,500..900&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../assets/site.css">
+<link rel="stylesheet" href="../../assets/forms.css">
+<script src="../../assets/site.js" defer></script>
+<script src="../../assets/forms.js" defer></script>
+<style>body{margin:0;background:#f4f4f2}</style>
+</head>
+<body>
+<a class="ss-skip" href="#main" data-en="Skip to main content" data-pt="Pular para o conteúdo">Pular para o conteúdo</a>
+<div class="ff-page">
+<header class="ff-top">
+<div class="ff-top__in">
+<a class="ff-logo" href="../../pt.html" data-href-en="../../index.html" data-href-pt="../../pt.html"><b>4 SAVINGS</b><span>SOLUTIONS</span></a>
+<nav class="ff-nav" aria-label="Menu">
+<a class="ff-nav__link" href="../" data-en="All forms" data-pt="Todos os formulários">Todos os formulários</a>
+<div class="ff-lang">
+<a data-lang-switch="en" hreflang="en" aria-label="English" href="?lang=en"><svg width="22" height="15" viewBox="0 0 22 15" aria-hidden="true"><rect width="22" height="15" fill="#B22234"></rect><rect y="1.15" width="22" height="1.15" fill="#fff"></rect><rect y="3.45" width="22" height="1.15" fill="#fff"></rect><rect y="5.75" width="22" height="1.15" fill="#fff"></rect><rect y="8.05" width="22" height="1.15" fill="#fff"></rect><rect y="10.35" width="22" height="1.15" fill="#fff"></rect><rect y="12.65" width="22" height="1.15" fill="#fff"></rect><rect width="9.5" height="8.05" fill="#3C3B6E"></rect></svg> EN</a>
+<a data-lang-switch="pt" hreflang="pt-BR" aria-label="Português" href="?lang=pt"><svg width="22" height="15" viewBox="0 0 22 15" aria-hidden="true"><rect width="22" height="15" fill="#009C3B"></rect><polygon points="11,1.8 20,7.5 11,13.2 2,7.5" fill="#FFDF00"></polygon><circle cx="11" cy="7.5" r="3.4" fill="#002776"></circle></svg> PT</a>
+</div>
+</nav>
+</div>
+</header>
+<main id="main" tabindex="-1">
+<section class="ff-hero">
+<div class="ff-hero__in">
+<nav class="ff-crumbs" aria-label="Breadcrumb"><a href="../../pt.html" data-href-en="../../index.html" data-href-pt="../../pt.html" data-en="Home" data-pt="Início">Início</a><span aria-hidden="true"> / </span><a href="../" data-en="Forms" data-pt="Formulários">Formulários</a><span aria-hidden="true"> / </span><span data-en="Homeowners Insurance" data-pt="Seguro Residencial">Seguro Residencial</span></nav>
+<h1 data-ff-title>Seguro Residencial</h1>
+<p data-ff-intro></p>
+</div>
+</section>
+<div class="ff-wrap">
+<div id="ff-root" data-form="residencial"></div>
+<noscript><p style="background:#fff;padding:24px;border-radius:16px">Ative o JavaScript para preencher o formulário. / Please enable JavaScript to fill in this form.</p></noscript>
+</div>
+</main>
+<footer class="ff-foot">
+<div class="ff-foot__in">
+<b>4 SAVINGS SOLUTIONS</b>
+<div data-en="Licensed insurance agency · License #[LICENSE #] · [LICENSED STATES]" data-pt="Agência de seguros licenciada · Licença nº [LICENÇA] · [ESTADOS LICENCIADOS]">Agência de seguros licenciada · Licença nº [LICENÇA] · [ESTADOS LICENCIADOS]</div>
+<nav class="ss-legal" aria-label="Legal">
+<a href="../../privacidade.html" data-href-en="../../privacy.html" data-href-pt="../../privacidade.html" data-en="Privacy Policy" data-pt="Política de Privacidade">Política de Privacidade</a>
+<button type="button" data-ss-cookie-settings data-en="Cookie preferences" data-pt="Preferências de cookies">Preferências de cookies</button>
+<a href="../../privacidade.html#acessibilidade" data-href-en="../../privacy.html#accessibility" data-href-pt="../../privacidade.html#acessibilidade" data-en="Accessibility" data-pt="Acessibilidade">Acessibilidade</a>
+</nav>
+</div>
+</footer>
+</div>
+<script>
+if (document.documentElement.lang === 'pt-BR') {
+  document.write('<div vw class="enabled"><div vw-access-button class="active"></div><div vw-plugin-wrapper><div class="vw-plugin-top-wrapper"></div></div></div>');
+  var s = document.createElement('script');
+  s.src = 'https://vlibras.gov.br/app/vlibras-plugin.js';
+  s.onload = function () { if (window.VLibras) new window.VLibras.Widget('https://vlibras.gov.br/app'); };
+  document.body.appendChild(s);
+}
+</script>
+</body>
+</html>

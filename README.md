@@ -13,6 +13,15 @@ Static bilingual (EN / PT) lead-generation website. No build step: deploy the fo
 | Blog article template | `blog-commercial-auto.html` | `blog-auto-comercial.html` |
 | Privacy policy + accessibility statement | `privacy.html` | `privacidade.html` |
 
+## Quote forms (`/formularios/`)
+
+Separate section, not linked from the main menu. `/formularios/` lists all forms; each one lives at `/formularios/<type>/`:
+`auto`, `auto-comercial`, `residencial`, `aluguel`, `general-liability`, `workers-comp`, `auto-dealer`, `bond`, `mobile-home`, `barco`.
+
+- Portuguese or English: follows the browser language, with an EN/PT switch. Force it with `?lang=pt` or `?lang=en`.
+- Questions live in `assets/forms.js` (`FORMS`), with conditional fields, repeatable groups (household members, vehicles, people) and photo uploads.
+- Submission: without a server, the answers are sent as a WhatsApp message (SSN is never put in the message, and photos are attached in the chat). To receive everything, files included, set `CONFIG.endpoint` in `assets/forms.js` to a service that accepts `multipart/form-data`.
+
 ## Shared features (`assets/site.js` + `assets/site.css`)
 
 - **Cookie consent (LGPD / privacy):** banner with Accept all / Only necessary / Customize, saved per visitor, with Google Consent Mode v2. Install Google Tag Manager, GA4, Google Ads and the Meta Pixel *after* `assets/site.js` so they respect the visitor's choice.

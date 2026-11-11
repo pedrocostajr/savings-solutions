@@ -11,13 +11,16 @@
   /* ------------------------------------------------------------------
      CONFIG — fill these in before going live
      ------------------------------------------------------------------ */
+  // Site root, resolved from this script's URL so links work from sub-folders (e.g. /formularios/auto/)
+  var BASE = (document.currentScript && document.currentScript.src) ? new URL('..', document.currentScript.src).href : '';
+
   var CONFIG = {
     // Agency WhatsApp number: digits only, with country code (US = 1). Example: '15551234567'
     whatsapp: '',
     // Optional: URL that receives each lead as JSON (Make, Zapier, Google Apps Script, CRM...)
     leadWebhook: '',
-    privacyUrl: { en: 'privacy.html', pt: 'privacidade.html' },
-    accessibilityUrl: { en: 'privacy.html#accessibility', pt: 'privacidade.html#acessibilidade' }
+    privacyUrl: { en: BASE + 'privacy.html', pt: BASE + 'privacidade.html' },
+    accessibilityUrl: { en: BASE + 'privacy.html#accessibility', pt: BASE + 'privacidade.html#acessibilidade' }
   };
 
   var lang = (document.documentElement.lang || 'en').toLowerCase().indexOf('pt') === 0 ? 'pt' : 'en';
@@ -501,6 +504,9 @@
       });
     });
   }
+
+  // Shared with assets/forms.js
+  window.ssSite = { lang: lang, base: BASE, waUrl: waUrl, submitLead: submitLead };
 
   function init() {
     buildCookieBanner();
