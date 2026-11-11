@@ -940,7 +940,7 @@
         } else if (res.status === 503 && res.body.code === 'not_configured') {
           viaWhatsApp(); // email delivery not set up yet on the server
         } else {
-          fail(res.body.code === 'too_large' ? UI.tooLarge : UI.sendErr);
+          fail(res.body.code === 'too_large' ? UI.tooLarge : UI.sendErr + ' (' + (res.body.code || 'http ' + res.status) + (res.body.reason ? ': ' + res.body.reason : '') + ')');
         }
       })
       .catch(function (err) { fail(err && err.code === 'too_large' ? UI.tooLarge : UI.sendErr); });

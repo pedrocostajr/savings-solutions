@@ -129,7 +129,8 @@ module.exports = async function handler(req, res) {
     });
     return res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('sendMail failed:', err && err.message);
-    return res.status(502).json({ ok: false, code: 'send_failed' });
+    console.error('sendMail failed:', err && err.code, err && err.responseCode, err && err.message);
+    // Short, non-sensitive reason so the form can show it (e.g. EAUTH = wrong user/password, ETIMEDOUT = port)
+    return res.status(502).json({ ok: false, code: 'send_failed', reason: (err && (err.code || err.responseCode)) || 'unknown' });
   }
 };
