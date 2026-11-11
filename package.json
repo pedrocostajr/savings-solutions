@@ -1,0 +1,10 @@
+{
+  "name": "savings-solutions-site",
+  "private": true,
+  "description": "Static bilingual site + /api/submit function that emails quote forms",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "busboy": "1.6.0",
+    "nodemailer": "6.9.16"
+  }
+}

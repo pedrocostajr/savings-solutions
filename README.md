@@ -20,7 +20,20 @@ Separate section, not linked from the main menu. `/formularios/` lists all forms
 
 - Portuguese or English: follows the browser language, with an EN/PT switch. Force it with `?lang=pt` or `?lang=en`.
 - Questions live in `assets/forms.js` (`FORMS`), with conditional fields, repeatable groups (household members, vehicles, people) and photo uploads.
-- Submission: without a server, the answers are sent as a WhatsApp message (SSN is never put in the message, and photos are attached in the chat). To receive everything, files included, set `CONFIG.endpoint` in `assets/forms.js` to a service that accepts `multipart/form-data`.
+- Submission: each form is posted to `/api/submit` (Vercel function in `api/submit.js`), which emails all answers, with photos attached, to **contacts@savings-solutions.com**. Reply-To is the client's email. Photos are resized in the browser to fit Vercel's 4.5 MB request limit.
+- Until the email settings below exist, the function answers "not configured" and the form falls back to a WhatsApp message automatically (SSN is never put in that message).
+
+### Email settings (Vercel → Project → Settings → Environment Variables)
+
+| Variable | Example |
+|---|---|
+| `SMTP_HOST` | `smtp.gmail.com` (Google Workspace), `smtp.office365.com` (Microsoft 365), `smtp.hostinger.com`, `smtpout.secureserver.net` (GoDaddy) |
+| `SMTP_PORT` | `465` (default) or `587` |
+| `SMTP_USER` | `contacts@savings-solutions.com` |
+| `SMTP_PASS` | mailbox password or app password (Google Workspace requires an app password) |
+| `MAIL_TO` | optional, default `contacts@savings-solutions.com` (comma-separated for several) |
+
+After saving the variables, redeploy the project.
 
 ## Shared features (`assets/site.js` + `assets/site.css`)
 

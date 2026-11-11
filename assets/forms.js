@@ -9,9 +9,11 @@
   'use strict';
 
   var CONFIG = {
-    // Optional: URL that receives each submission as multipart/form-data, files included
-    // (Formspree, Basin, Make, Google Apps Script, your own API...). Leave empty to use WhatsApp.
-    endpoint: ''
+    // URL that receives each submission as multipart/form-data, files included.
+    // Empty = the site's own /api/submit (Vercel function that emails contacts@savings-solutions.com).
+    // If that function is not configured yet, the form falls back to WhatsApp automatically.
+    endpoint: '',
+    maxUploadBytes: 4.2 * 1024 * 1024
   };
 
   var lang = (document.documentElement.lang || 'pt').toLowerCase().indexOf('pt') === 0 ? 'pt' : 'en';
@@ -487,7 +489,9 @@
       openWa: 'Open WhatsApp',
       filesNote: 'Photos/documents selected on the form',
       ssnNote: 'SSN: I will share it by phone',
-      sendErr: 'We could not send the form. Please try again or talk to us on WhatsApp.',
+      sendErr: 'We could not send the form. Please try again or send it on WhatsApp.',
+      tooLarge: 'The photos are too large to send together. Remove some files or send the form on WhatsApp and attach the photos there.',
+      sendWa: 'Send on WhatsApp instead',
       waHead: 'New quote request',
       indexTitle: 'Quote forms',
       indexIntro: 'Choose the type of insurance. Each form has the information our advisors need to quote with several carriers.',
@@ -508,7 +512,9 @@
       openWa: 'Abrir WhatsApp',
       filesNote: 'Fotos/documentos selecionados no formulário',
       ssnNote: 'SSN: passo por telefone',
-      sendErr: 'Não conseguimos enviar o formulário. Tente de novo ou fale com a gente no WhatsApp.',
+      sendErr: 'Não conseguimos enviar o formulário. Tente de novo ou envie pelo WhatsApp.',
+      tooLarge: 'As fotos ficaram grandes demais para enviar juntas. Remova alguns arquivos ou envie pelo WhatsApp e anexe as fotos lá.',
+      sendWa: 'Enviar pelo WhatsApp',
       waHead: 'Novo pedido de cotação',
       indexTitle: 'Formulários de cotação',
       indexIntro: 'Escolha o tipo de seguro. Cada formulário tem as informações que nossos agentes precisam para cotar em várias seguradoras.',
@@ -805,6 +811,63 @@
     try { return JSON.parse(sessionStorage.getItem('ss-attr') || '{}'); } catch (e) { return {}; }
   }
 
+  // Phone photos are often 3–6 MB: resize to max 1600 px JPEG before upload.
+  function shrink(file) {
+    if (!/^image\/(jpeg|png|webp|heic|heif)$/i.test(file.type) || file.size < 500 * 1024 || !window.createImageBitmap) return Promise.resolve(file);
+    return createImageBitmap(file).then(function (bmp) {
+      var scale = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(bmp.width * scale);
+      canvas.height = Math.round(bmp.height * scale);
+      canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      return new Promise(function (resolve) {
+        canvas.toBlob(function (blob) {
+          resolve(blob && blob.size < file.size ? new File([blob], file.name.replace(/\.[^.]+$/, '') + '.jpg', { type: 'image/jpeg' }) : file);
+        }, 'image/jpeg', 0.82);
+      });
+    }).catch(function () { return file; });
+  }
+
+  function buildPayload(form, slug, def, data, lead) {
+    var fd = new FormData();
+    var hp = form.querySelector('[name="_gotcha"]');
+    fd.append('_gotcha', hp ? hp.value : '');
+    fd.append('consent', 'yes');
+    fd.append('_form', slug);
+    fd.append('_title', t(def.title));
+    fd.append('_language', lang);
+    fd.append('_page', location.href);
+    fd.append('_attribution', JSON.stringify(attribution()));
+    fd.append('_name', lead.name || '');
+    fd.append('_phone', lead.phone || '');
+    var emailAns = data.answers.filter(function (a) { return a.name === 'email'; })[0];
+    fd.append('_email', emailAns ? emailAns.value : '');
+    fd.append('_answers', JSON.stringify(data.answers.map(function (a) { return { label: a.label, value: a.value }; })));
+
+    var jobs = [];
+    var labels = {};
+    form.querySelectorAll('.ff-field[data-kind="file"]').forEach(function (w) {
+      if (!isVisible(w, form)) return;
+      var inp = w.querySelector('input[type="file"]');
+      if (!inp || inp.disabled) return;
+      var label = w.dataset.label;
+      var item = w.closest('.ff-repeat__item');
+      if (item) label = item.querySelector('.ff-repeat__title').textContent + ' · ' + label;
+      Array.prototype.forEach.call(inp.files || [], function (file) {
+        var key = 'file_' + (jobs.length + 1);
+        labels[key] = label;
+        jobs.push(shrink(file).then(function (f) { return [key, f]; }));
+      });
+    });
+    return Promise.all(jobs).then(function (pairs) {
+      var total = 0;
+      pairs.forEach(function (p) { total += p[1].size; fd.append(p[0], p[1], p[1].name); });
+      fd.append('_file_labels', JSON.stringify(labels));
+      if (total > CONFIG.maxUploadBytes) throw Object.assign(new Error('too_large'), { code: 'too_large' });
+      return fd;
+    });
+  }
+
   function onSubmit(e, form, slug, def, card) {
     e.preventDefault();
     updateConditions(form);
@@ -839,29 +902,48 @@
       window.scrollTo({ top: card.getBoundingClientRect().top + window.scrollY - 120 });
     }
 
-    if (CONFIG.endpoint) {
-      var fd = new FormData(form);
-      fd.append('_form', slug);
-      fd.append('_language', lang);
-      fd.append('_page', location.href);
-      fd.append('_attribution', JSON.stringify(attribution()));
-      submitBtn.disabled = true;
-      submitBtn.textContent = UI.sending;
-      fetch(CONFIG.endpoint, { method: 'POST', body: fd, headers: { Accept: 'application/json' } })
-        .then(function (r) { if (!r.ok) throw new Error(r.status); })
-        .then(function () { if (site.submitLead) site.submitLead(lead); success(false); })
-        .catch(function () {
-          submitBtn.disabled = false;
-          submitBtn.textContent = UI.submit;
-          status.textContent = UI.sendErr;
-        });
-      return;
+    function viaWhatsApp() {
+      if (site.submitLead) site.submitLead(lead);
+      var url = (site.waUrl || function (txt) { return 'https://wa.me/?text=' + encodeURIComponent(txt); })(waText(def, data));
+      window.open(url, '_blank', 'noopener');
+      success(true, url);
+    }
+    function fail(message) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = UI.submit;
+      status.textContent = message;
+      if (!form.querySelector('.ff-fallback')) {
+        var btn = el('button', { type: 'button', class: 'ff-fallback', text: UI.sendWa });
+        btn.addEventListener('click', viaWhatsApp);
+        status.insertAdjacentElement('afterend', btn);
+      }
+      status.setAttribute('tabindex', '-1');
+      status.focus();
     }
 
-    if (site.submitLead) site.submitLead(lead);
-    var url = (site.waUrl || function (txt) { return 'https://wa.me/?text=' + encodeURIComponent(txt); })(waText(def, data));
-    window.open(url, '_blank', 'noopener');
-    success(true, url);
+    var endpoint = CONFIG.endpoint || (/^https?:$/.test(location.protocol) ? BASE + 'api/submit' : '');
+    if (!endpoint) { viaWhatsApp(); return; }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = UI.sending;
+    status.textContent = '';
+    buildPayload(form, slug, def, data, lead)
+      .then(function (fd) {
+        return fetch(endpoint, { method: 'POST', body: fd, headers: { Accept: 'application/json' } }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; });
+        });
+      })
+      .then(function (res) {
+        if (res.status === 200 && res.body.ok) {
+          if (site.submitLead) site.submitLead(lead);
+          success(false);
+        } else if (res.status === 503 && res.body.code === 'not_configured') {
+          viaWhatsApp(); // email delivery not set up yet on the server
+        } else {
+          fail(res.body.code === 'too_large' ? UI.tooLarge : UI.sendErr);
+        }
+      })
+      .catch(function (err) { fail(err && err.code === 'too_large' ? UI.tooLarge : UI.sendErr); });
   }
 
   function renderForm(root, slug) {
@@ -875,6 +957,10 @@
 
     var form = el('form', { class: 'ff-form', novalidate: true, 'aria-label': t(def.title) });
     form.appendChild(el('div', { class: 'ff-summary', role: 'alert', tabindex: '-1', hidden: true }));
+    // Spam trap: hidden from people, bots fill it in
+    form.appendChild(el('div', { class: 'ff-hp', 'aria-hidden': 'true' }, [
+      el('label', {}, ['Website', el('input', { type: 'text', name: '_gotcha', tabindex: '-1', autocomplete: 'off' })])
+    ]));
     form.appendChild(el('p', { class: 'ff-note', text: UI.requiredNote }));
 
     def.sections.forEach(function (s, i) {
@@ -912,7 +998,7 @@
     var grid = el('div', { class: 'ff-index' });
     INDEX.forEach(function (row) {
       var def = FORMS[row[0]];
-      grid.appendChild(el('a', { class: 'ff-index__card', href: row[0] + '/' + (lang === 'en' ? '?lang=en' : '') }, [
+      grid.appendChild(el('a', { class: 'ff-index__card', href: BASE + 'formularios/' + row[0] + '/' + (lang === 'en' ? '?lang=en' : '') }, [
         el('span', { class: 'ff-index__title', text: t(def.title) }),
         el('span', { class: 'ff-index__desc', text: t(row[1]) }),
         el('span', { class: 'ff-index__go', 'aria-hidden': 'true', text: UI.start + ' →' })
