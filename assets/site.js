@@ -53,7 +53,13 @@
       formMsgHead: 'Hi! I would like a free insurance quote.',
       formConsent: 'I agree to be contacted by phone, text or WhatsApp about insurance and I accept the',
       formErr: 'Please fill in your name and phone and check the consent box.',
-      formOk: 'Thank you! We are opening WhatsApp so you can talk to an advisor.',
+      formOk: 'Thank you! We received your information. A licensed advisor will contact you soon.',
+      formSending: 'Sending…',
+      formFallback: 'We could not send the form right now. Please send it on WhatsApp:',
+      sendWa: 'Send on WhatsApp',
+      mailForm: 'Website quote form',
+      mailChat: 'Website WhatsApp chat',
+      lblName: 'Name', lblPhone: 'Phone / WhatsApp', lblCoverage: 'Insurance',
       cookieTitle: 'Your privacy',
       cookieText: 'We use necessary cookies to run this site. With your permission, we also use analytics and advertising cookies to measure visits and improve our ads. You can change your choice at any time.',
       cookieMore: 'Privacy Policy',
@@ -107,7 +113,13 @@
       formMsgHead: 'Olá! Quero uma cotação de seguro grátis.',
       formConsent: 'Concordo em ser contatado por telefone, mensagem ou WhatsApp sobre seguros e aceito a',
       formErr: 'Preencha nome e telefone e marque a caixa de consentimento, por favor.',
-      formOk: 'Obrigado! Estamos abrindo o WhatsApp para você falar com um agente.',
+      formOk: 'Obrigado! Recebemos seus dados. Um agente licenciado vai entrar em contato em breve.',
+      formSending: 'Enviando…',
+      formFallback: 'Não conseguimos enviar agora. Envie pelo WhatsApp:',
+      sendWa: 'Enviar pelo WhatsApp',
+      mailForm: 'Formulário do site',
+      mailChat: 'Chat do WhatsApp do site',
+      lblName: 'Nome', lblPhone: 'Telefone / WhatsApp', lblCoverage: 'Seguro',
       cookieTitle: 'Sua privacidade',
       cookieText: 'Usamos cookies necessários para o site funcionar. Com a sua permissão, também usamos cookies de análise e de publicidade para medir visitas e melhorar nossos anúncios, conforme a LGPD. Você pode mudar sua escolha a qualquer momento.',
       cookieMore: 'Política de Privacidade',
@@ -422,6 +434,12 @@
         submitLead(lead);
         var url = waUrl(T.waMsg(lead));
         window.open(url, '_blank', 'noopener');
+        // Copy of the chat lead to the agency mailbox (in the background)
+        emailLead(T.mailChat + ': ' + lead.coverage, [
+          { label: T.lblName, value: lead.name },
+          { label: T.lblPhone, value: lead.phone },
+          { label: T.lblCoverage, value: lead.coverage }
+        ], { name: lead.name, phone: lead.phone });
         say(T.done);
         foot.innerHTML = '';
         var link = el('a', { class: 'ss-btn-wa', href: url, target: '_blank', rel: 'noopener', html: ICON.wa + '<span></span>' });
@@ -470,6 +488,30 @@
   /* ------------------------------------------------------------------
      4. Quote forms -> validate, consent, lead, WhatsApp
      ------------------------------------------------------------------ */
+  /* ------------------------------------------------------------------
+     Email delivery: same /api/submit function used by /formularios.
+     Resolves { ok, code }; never rejects.
+     ------------------------------------------------------------------ */
+  function emailLead(title, answers, extra) {
+    if (!/^https?:$/.test(location.protocol)) return Promise.resolve({ ok: false, code: 'offline' });
+    var fd = new FormData();
+    fd.append('_gotcha', '');
+    fd.append('consent', 'yes');
+    fd.append('_form', location.pathname);
+    fd.append('_title', title);
+    fd.append('_language', lang);
+    fd.append('_page', location.href);
+    fd.append('_attribution', JSON.stringify(attribution()));
+    fd.append('_name', (extra && extra.name) || '');
+    fd.append('_phone', (extra && extra.phone) || '');
+    fd.append('_email', (extra && extra.email) || '');
+    fd.append('_answers', JSON.stringify(answers));
+    fd.append('_file_labels', '{}');
+    return fetch(BASE + 'api/submit', { method: 'POST', body: fd, keepalive: true, headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok && !!j.ok, code: j.code || 'http_' + r.status }; }); })
+      .catch(function () { return { ok: false, code: 'network' }; });
+  }
+
   function wireForms() {
     document.querySelectorAll('form[data-ss-lead]').forEach(function (form) {
       var status = el('p', { class: 'ss-form-status', role: 'status' });
@@ -489,18 +531,46 @@
         }
         var lead = { source: 'quote_form', consent: true, fields: {} };
         var lines = [T.formMsgHead];
+        var answers = [];
         Array.prototype.forEach.call(form.elements, function (f) {
           if (!f.name || f.name === 'consent' || !f.value.trim()) return;
           var label = f.closest('label');
           var title = label ? label.childNodes[0].textContent.trim() : f.name;
-          lead.fields[f.name] = f.value.trim();
-          lines.push(title + ': ' + f.value.trim());
+          var value = f.tagName === 'SELECT' && f.selectedOptions[0] ? f.selectedOptions[0].textContent.trim() : f.value.trim();
+          lead.fields[f.name] = value;
+          lines.push(title + ': ' + value);
+          answers.push({ label: title, value: value });
         });
         lead.name = lead.fields.name; lead.phone = lead.fields.phone; lead.coverage = lead.fields.coverage || '';
-        submitLead(lead);
-        status.className = 'ss-form-status ss-form-status--ok';
-        status.textContent = T.formOk;
-        window.open(waUrl(lines.join('\n')), '_blank', 'noopener');
+
+        var btn = form.querySelector('button[type="submit"]');
+        var btnText = btn ? btn.textContent : '';
+        if (btn) { btn.disabled = true; btn.textContent = T.formSending; }
+        status.className = 'ss-form-status';
+        status.textContent = '';
+        var oldLink = form.querySelector('.ss-form-wa');
+        if (oldLink) oldLink.remove();
+
+        var title = T.mailForm + (lead.coverage ? ': ' + lead.coverage : '');
+        emailLead(title, answers, { name: lead.name, phone: lead.phone, email: lead.fields.email }).then(function (res) {
+          if (btn) { btn.disabled = false; btn.textContent = btnText; }
+          if (res.ok) {
+            submitLead(lead);
+            status.className = 'ss-form-status ss-form-status--ok';
+            status.textContent = T.formOk;
+            form.reset();
+            return;
+          }
+          // Email not available: hand off to WhatsApp (a link, since a popup after a delay is blocked)
+          submitLead(lead);
+          status.className = 'ss-form-status ss-form-status--error';
+          status.textContent = T.formFallback;
+          var a = el('a', { class: 'ss-btn-wa ss-form-wa', href: waUrl(lines.join('\n')), target: '_blank', rel: 'noopener', html: ICON.wa + '<span></span>' });
+          a.querySelector('span').textContent = T.sendWa;
+          a.style.gridColumn = '1 / -1';
+          status.insertAdjacentElement('afterend', a);
+          a.focus();
+        });
       });
     });
   }
